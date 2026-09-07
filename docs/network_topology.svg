@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="520" viewBox="0 0 1100 520" role="img" aria-labelledby="title desc">
+  <title id="title">Two-board CAN ECU simulator network topology</title>
+  <desc id="desc">Engine ESP32 and Torque Logger ESP32 connect through SN65HVD230 transceivers to a terminated CAN bus. The second board streams data to a Python host.</desc>
+  <defs>
+    <style>
+      .title{font:700 25px Arial;fill:#14213d}.label{font:700 17px Arial;fill:#14213d}.text{font:14px Arial;fill:#263238}.small{font:12px Arial;fill:#455a64}.box{fill:#f7fbff;stroke:#1565c0;stroke-width:2}.phy{fill:#fff8e1;stroke:#f9a825;stroke-width:2}.logical{fill:#f3e5f5;stroke:#7b1fa2;stroke-width:2;stroke-dasharray:7 4}.pc{fill:#e8f5e9;stroke:#2e7d32;stroke-width:2}.bus{stroke:#263238;stroke-width:6}.canh{stroke:#d84315;stroke-width:4}.canl{stroke:#1565c0;stroke-width:4}.wire{stroke:#546e7a;stroke-width:2;fill:none}.arrow{stroke:#455a64;stroke-width:2;fill:none;marker-end:url(#head)}
+    </style>
+    <marker id="head" markerWidth="9" markerHeight="7" refX="8" refY="3.5" orient="auto"><polygon points="0 0,9 3.5,0 7" fill="#455a64"/></marker>
+  </defs>
+  <rect width="1100" height="520" fill="#ffffff"/>
+  <text x="550" y="38" text-anchor="middle" class="title">500 kbit/s CAN 2.0A ECU Network</text>
+
+  <rect x="55" y="75" width="290" height="135" rx="14" class="box"/>
+  <text x="200" y="105" text-anchor="middle" class="label">Node A · ENGINE ECU</text>
+  <text x="75" y="135" class="text">ESP32 DevKit V1</text>
+  <text x="75" y="160" class="small">0x100 Engine Status · 100 ms</text>
+  <text x="75" y="182" class="small">RPM · Throttle · Temperature · CRC-8</text>
+
+  <rect x="755" y="75" width="290" height="135" rx="14" class="box"/>
+  <text x="900" y="105" text-anchor="middle" class="label">Node B · TORQUE / LOGGER</text>
+  <text x="775" y="135" class="text">ESP32 DevKit V1</text>
+  <text x="775" y="158" class="small">0x101 Torque Limit · 100 ms</text>
+  <text x="775" y="180" class="small">CRC/counter monitor · 60 Nm failsafe</text>
+
+  <rect x="780" y="225" width="240" height="68" rx="12" class="logical"/>
+  <text x="900" y="251" text-anchor="middle" class="label">Logical Dashboard ECU</text>
+  <text x="900" y="275" text-anchor="middle" class="small">0x200 Dashboard Status · 50 ms</text>
+  <path d="M900 210 L900 225" class="wire"/>
+
+  <rect x="105" y="250" width="190" height="70" rx="12" class="phy"/>
+  <text x="200" y="280" text-anchor="middle" class="label">SN65HVD230 A</text>
+  <text x="200" y="302" text-anchor="middle" class="small">3.3 V CAN transceiver</text>
+  <rect x="805" y="330" width="190" height="70" rx="12" class="phy"/>
+  <text x="900" y="360" text-anchor="middle" class="label">SN65HVD230 B</text>
+  <text x="900" y="382" text-anchor="middle" class="small">3.3 V CAN transceiver</text>
+  <path d="M200 210 L200 250" class="wire"/>
+  <path d="M900 293 L900 330" class="wire"/>
+
+  <line x1="200" y1="435" x2="900" y2="435" class="canh"/>
+  <line x1="200" y1="475" x2="900" y2="475" class="canl"/>
+  <text x="550" y="426" text-anchor="middle" class="label">CANH</text>
+  <text x="550" y="502" text-anchor="middle" class="label">CANL</text>
+  <path d="M200 320 L200 435 M200 435 L200 475" class="wire"/>
+  <path d="M900 400 L900 435 M900 435 L900 475" class="wire"/>
+  <rect x="178" y="442" width="44" height="26" rx="4" fill="#fff" stroke="#263238"/>
+  <text x="200" y="460" text-anchor="middle" class="small">120 Ω</text>
+  <rect x="878" y="442" width="44" height="26" rx="4" fill="#fff" stroke="#263238"/>
+  <text x="900" y="460" text-anchor="middle" class="small">120 Ω</text>
+
+  <rect x="390" y="245" width="270" height="105" rx="14" class="pc"/>
+  <text x="525" y="276" text-anchor="middle" class="label">Host Telemetry Tool</text>
+  <text x="525" y="302" text-anchor="middle" class="text">Python · CSV · Live Plots</text>
+  <text x="525" y="326" text-anchor="middle" class="small">Torque MAP · Bus load · Safety monitor</text>
+  <path d="M805 350 C735 350 720 298 660 298" class="arrow"/>
+  <text x="730" y="325" text-anchor="middle" class="small">USB serial</text>
+  <text x="550" y="398" text-anchor="middle" class="small">Lower CAN ID wins arbitration: 0x100 → 0x101 → 0x200 → 0x700</text>
+</svg>
+

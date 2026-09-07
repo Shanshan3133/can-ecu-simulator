@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "can-ecu-tool"
+version = "2.0.0"
+description = "CAN ECU decoder, safety monitor, bus-load logger, simulator, and live torque-map plotter"
+requires-python = ">=3.10"
+dependencies = ["pyserial>=3.5", "matplotlib>=3.7"]
+
+[project.scripts]
+can-ecu = "can_ecu_tool.cli:main"
+
+[tool.setuptools]
+packages = ["can_ecu_tool"]

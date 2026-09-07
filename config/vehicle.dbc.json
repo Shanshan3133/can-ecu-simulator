@@ -1,0 +1,48 @@
+{
+  "format": "student-dbc-style-v2",
+  "bus": {"bitrate": 500000, "id_type": "standard_11_bit", "default_byte_order": "little_endian", "byte_order_name": "Intel"},
+  "messages": {
+    "0x100": {
+      "name": "ENGINE_STATUS", "dlc": 8, "cycle_ms": 100, "transmitter": "ENGINE_ECU",
+      "crc": {"type": "crc8_sae_j1850", "start_byte": 0, "length": 7, "crc_byte": 7, "polynomial": "0x1D", "initial_value": "0xFF", "final_xor": "0xFF"},
+      "signals": [
+        {"name": "engine_rpm", "start_bit": 0, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 0.25, "offset": 0, "unit": "rpm", "min": 0, "max": 16000},
+        {"name": "throttle_position", "start_bit": 16, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 0.4, "offset": 0, "unit": "%", "min": 0, "max": 100},
+        {"name": "rolling_counter", "start_bit": 24, "length": 4, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": ""},
+        {"name": "reserved_counter_upper", "start_bit": 28, "length": 4, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "reserved"},
+        {"name": "coolant_temperature", "start_bit": 32, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": -40, "unit": "degC", "min": -40, "max": 215},
+        {"name": "reserved_future", "start_bit": 40, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "reserved"}
+      ]
+    },
+    "0x101": {
+      "name": "TORQUE_LIMIT", "dlc": 8, "cycle_ms": 100, "transmitter": "TORQUE_LOGGER_ECU",
+      "crc": {"type": "crc8_sae_j1850", "start_byte": 0, "length": 7, "crc_byte": 7, "polynomial": "0x1D", "initial_value": "0xFF", "final_xor": "0xFF"},
+      "signals": [
+        {"name": "torque_limit", "start_bit": 0, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 0.1, "offset": 0, "unit": "Nm", "min": 0, "max": 500},
+        {"name": "limit_reason", "start_bit": 16, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "bitfield"},
+        {"name": "rolling_counter", "start_bit": 24, "length": 4, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": ""},
+        {"name": "reserved_counter_upper", "start_bit": 28, "length": 4, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "reserved"},
+        {"name": "reserved_future", "start_bit": 32, "length": 24, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "reserved"}
+      ]
+    },
+    "0x200": {
+      "name": "DASHBOARD_STATUS", "dlc": 8, "cycle_ms": 50, "transmitter": "DASHBOARD_LOGICAL_ECU",
+      "crc": {"type": "crc8_sae_j1850", "start_byte": 0, "length": 7, "crc_byte": 7, "polynomial": "0x1D", "initial_value": "0xFF", "final_xor": "0xFF"},
+      "signals": [
+        {"name": "display_rpm", "start_bit": 0, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 0.25, "offset": 0, "unit": "rpm"},
+        {"name": "display_torque_limit", "start_bit": 16, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 0.1, "offset": 0, "unit": "Nm"},
+        {"name": "warning_flags", "start_bit": 32, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "bitfield"},
+        {"name": "rolling_counter", "start_bit": 40, "length": 4, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": ""},
+        {"name": "reserved_future", "start_bit": 44, "length": 12, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "reserved"}
+      ]
+    },
+    "0x700": {
+      "name": "NODE_HEARTBEAT", "dlc": 4, "cycle_ms": 1000, "transmitter": "ALL",
+      "signals": [
+        {"name": "node_id", "start_bit": 0, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": ""},
+        {"name": "state", "start_bit": 8, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "enum"},
+        {"name": "uptime_s", "start_bit": 16, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "s"}
+      ]
+    }
+  }
+}
