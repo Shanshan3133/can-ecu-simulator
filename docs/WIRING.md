@@ -1,66 +1,77 @@
-# 接线说明
+# Wiring and Power-Up Guide
 
-## 总线拓扑（文字图）
+## Physical topology
 
 ```text
-USB 电源/电脑                      USB 电源/电脑（主机工具读此串口）
-      │                                      │
- ESP32 A (Engine)                       ESP32 B (Torque/Logger)
- GPIO5 TX ──> CTX   SN65HVD230 A        GPIO5 TX ──> CTX   SN65HVD230 B
- GPIO4 RX <── CRX                         GPIO4 RX <── CRX
- 3V3 ───────> 3V3                         3V3 ───────> 3V3
- GND ───────> GND ───────── 共地 ───────── GND <────── GND
-               CANH ═════════════════════ CANH
-               CANL ═════════════════════ CANL
-                │                          │
-              120 Ω                      120 Ω
-            CANH-CANL                  CANH-CANL
+USB / host PC                              USB / host PC (logger reads this port)
+     |                                                   |
+ESP32 A — Engine ECU                         ESP32 B — Torque/Logger ECU
+GPIO5 TX  -> CTX  SN65HVD230 A              GPIO5 TX  -> CTX  SN65HVD230 B
+GPIO4 RX  <- CRX                            GPIO4 RX  <- CRX
+3V3       -> VCC                            3V3       -> VCC
+GND       -> GND -------- common ground ---- GND       -> GND
+                  CANH ===================== CANH
+                  CANL ===================== CANL
+                    |                         |
+                  120 Ω                     120 Ω
+                CANH–CANL                 CANH–CANL
 ```
 
-CANH 与 CANL 使用一对绞线更好。面包板台架建议总线长度小于 1 m，两个节点位于两端，不要留很长支线。
+Use a twisted pair for CANH and CANL. Keep the bench bus below 1 m, place both nodes at the physical ends, and avoid long stubs.
 
-## 每个 ESP32 到 SN65HVD230
+## ESP32-to-transceiver wiring
 
-| ESP32 DevKit | SN65HVD230 模块 | 说明 |
+Apply the following connections to both nodes:
+
+| ESP32 DevKit | SN65HVD230 module | Function |
 |---|---|---|
-| 3V3 | 3.3V / VCC | 只用 3.3 V |
-| GND | GND | 两节点必须共地 |
-| GPIO5 | CTX / TXD / D | 控制器发送到收发器 |
-| GPIO4 | CRX / RXD / R | 收发器接收到控制器 |
-| — | Rs / S | 若模块引出，正常高速模式通常接 GND；以模块说明为准 |
+| 3V3 | 3.3V / VCC | Transceiver supply |
+| GND | GND | Logic and bus reference |
+| GPIO5 | CTX / TXD / D | Controller transmit output |
+| GPIO4 | CRX / RXD / R | Controller receive input |
+| GND, if required | Rs / S | High-speed mode; verify the module schematic |
 
-不同商家丝印可能是 `D/R`、`TX/RX` 或 `CTX/CRX`。若名称不一致，按模块原理图确认方向。
+Vendor labels vary between `D/R`, `TX/RX`, and `CTX/CRX`. Confirm signal direction from the module schematic if the labels differ.
 
-## CAN 总线
+## CAN bus wiring
 
-| 节点 A | 节点 B |
+| Node A | Node B |
 |---|---|
 | CANH | CANH |
 | CANL | CANL |
 | GND | GND |
 
-在物理总线的两个末端各并联一个 120 Ω 电阻到 CANH 与 CANL 之间。只有两节点短总线时，这就是两个节点附近各一个。部分模块已经焊有 120 Ω：已内置时不要再并联。
+Install one 120 Ω resistor between CANH and CANL at each physical end. In this two-node network, place one resistor beside each transceiver. Do not add another resistor if the module already has an enabled 120 Ω termination resistor or jumper.
 
-断电检查：万用表电阻档量 CANH-CANL，应约为 60 Ω（两个 120 Ω 并联）。约 120 Ω 表示少一个终端；约 40 Ω 表示可能装了三个；接近 0 Ω 表示短路，禁止上电。
+With all power disconnected, measure resistance between CANH and CANL:
 
-## 可选 microSD（只接节点 B）
+- Approximately 60 Ω: correct; two 120 Ω resistors are in parallel.
+- Approximately 120 Ω: one termination is missing.
+- Approximately 40 Ω: three terminations may be installed.
+- Near 0 Ω: probable short circuit; do not apply power.
 
-| ESP32 B | SPI microSD |
+## Optional microSD connection on Node B
+
+| ESP32 B | SPI microSD module |
 |---|---|
 | GPIO18 | SCK / CLK |
 | GPIO19 | MISO |
 | GPIO23 | MOSI |
 | GPIO13 | CS |
-| 3V3 | VCC（须确认模块支持 3.3 V） |
+| 3V3 | VCC; verify 3.3 V compatibility |
 | GND | GND |
 
-启用 SD 前把卡格式化为 FAT32，并修改构建标志 `ENABLE_SD_LOG=1`。
+Format the card as FAT32 and set `ENABLE_SD_LOG=1` before rebuilding Node B.
 
-## 上电顺序
+## Safe power-up sequence
 
-1. 两根 USB 线全部拔掉。
-2. 完成接线，检查 3V3-GND、CANH-CANL 无短路。
-3. 断电测 CANH-CANL 约 60 Ω。
-4. 分别插入两根 USB 线；观察 10 秒，确认收发器和 ESP32 不发热。
-5. 只打开节点 B 串口或直接运行 Python 工具。
+1. Disconnect both USB cables.
+2. Complete all wiring.
+3. Check for shorts between 3V3 and GND.
+4. Measure approximately 60 Ω between CANH and CANL.
+5. Connect both USB cables.
+6. Observe the system for 10 seconds and disconnect immediately if either board or transceiver becomes hot.
+7. Open only Node B's serial port with the Python host tool.
+
+Use only one ESP32 power-input method at a time. For this project, USB power is the recommended option.
 

@@ -1,96 +1,151 @@
-# 测试步骤与验收标准
+# Test Procedure and Acceptance Criteria
 
-## A. 无硬件测试
+## A. Hardware-free verification
 
-在 `host` 文件夹创建虚拟环境并安装项目后执行：
-
-```powershell
-python -m unittest discover -s tests -v
-can-ecu --dbc ..\config\vehicle.dbc.json --simulate --duration 10 --output simulated.csv
-```
-
-验收：全部 11 项测试通过；命令退出码为 0；CSV 约有 420 条帧；包含 `ENGINE_STATUS`、`TORQUE_LIMIT`、`DASHBOARD_STATUS` 和两个节点的心跳；业务帧 `crc_ok` 均为 `True`。
-
-自动测试明确覆盖：标准 CRC 检查向量、错误 CRC、错误 DLC、连续三帧异常、滚动计数跳号、300 ms 发送超时、三帧恢复和总线负载计算。
-
-## B. 电气检查（必须断电）
-
-1. 检查每个收发器 VCC 只接 ESP32 3V3。
-2. 检查两节点 GND 相连、CANH 对 CANH、CANL 对 CANL。
-3. 测 CANH-CANL 电阻。
-
-验收：CANH-CANL 为约 60 Ω（考虑电阻误差，55–65 Ω 可接受）；3V3-GND 不短路。
-
-## C. 单节点启动
-
-分别只连接 USB，打开 115200 串口监视器并按复位。
-
-验收：节点 A 显示 `ENGINE_ECU ready`；节点 B 显示 `TORQUE_LOGGER_ECU ready`。单独运行时 CAN 发送可能因没有 ACK 而失败，这属于正常现象。
-
-## D. 双节点总线测试
-
-1. 关闭串口监视器。
-2. 两节点上电，运行：
+Create the Python environment from the `host` directory and run:
 
 ```powershell
-can-ecu --dbc ..\config\vehicle.dbc.json --port COM_B --duration 60 --output hardware_60s.csv
+.venv\Scripts\python.exe -m unittest discover -s tests -v
+.venv\Scripts\can-ecu.exe --dbc ..\config\vehicle.dbc.json --simulate --duration 10 --output simulated.csv
 ```
 
-3. 查看命令最终统计和 CSV。
+Acceptance criteria:
 
-验收：
+- All 11 automated tests pass.
+- The logger exits with code 0.
+- A 10-second capture contains approximately 420 frames.
+- IDs 0x100, 0x101, 0x200, and 0x700 are present.
+- All protected application frames report `crc_ok=True`.
+- Tests cover the CRC standard vector, wrong CRC, wrong DLC, three-fault threshold, rolling-counter loss, 300 ms timeout, three-frame recovery, and bus-load calculation.
 
-- 60 秒采集至少 2200 行：0x100 与 0x101 各约 600 条，0x200 约 1200 条，另有心跳；启动损失允许。
-- 0x100/0x101 平均周期为 90–110 ms；0x200 为 45–55 ms；0x700 为 950–1050 ms。
-- CRC 失败数为 0，业务帧保留位均为 0。
-- RPM 大致在 950–4100 rpm 变化，油门约 4–64%，扭矩限制随输入变化。
-- 0x100 每次有效帧均有相应 0x101；允许启动/停止边界相差 1 条。
-- CSV 中稳定态 `bus_load_pct` 的保守估计不超过 1.5%，理论设计值约 1.118%。
-- 两节点连续工作 10 分钟不复位、不异常发热。
+## B. Unpowered electrical inspection
 
-## E. 实时绘图
+1. Confirm that each transceiver VCC connects only to ESP32 3V3.
+2. Confirm common ground, CANH-to-CANH, and CANL-to-CANL wiring.
+3. Measure resistance between CANH and CANL with both USB cables disconnected.
+
+Acceptance criteria:
+
+- CANH-to-CANL resistance is 55–65 Ω.
+- No short exists between 3V3 and GND.
+- No conductor is loose or exposed to an adjacent breadboard row.
+
+## C. Individual-node startup
+
+Connect one board at a time, open a 115200-baud serial terminal, and reset it.
+
+Acceptance criteria:
+
+- Node A prints `ENGINE_ECU ready` and lists its fault commands.
+- Node B prints `TORQUE_LOGGER_ECU ready`.
+- No reset loop or abnormal heating occurs.
+
+A single node may report unsuccessful CAN transmissions because normal CAN requires another node to acknowledge the frame. This is expected.
+
+## D. Two-node communication test
+
+1. Close all serial monitors.
+2. Power both nodes.
+3. Run a 60-second capture from Node B:
 
 ```powershell
-can-ecu --dbc ..\config\vehicle.dbc.json --port COM_B --plot --duration 60 --output plotted.csv
+.venv\Scripts\can-ecu.exe --dbc ..\config\vehicle.dbc.json --port COM_B --duration 60 --output hardware_60s.csv
 ```
 
-验收：三个时域子图和 RPM–Torque MAP 持续刷新；油门上升时 RPM 与扭矩总体上升；高转速区出现降额趋势；终端实时显示负载率和安全状态；关闭后 CSV 可正常打开。
+Acceptance criteria:
 
-## F. 建议的故障注入
+- At least 2,200 rows are captured in 60 seconds.
+- IDs 0x100 and 0x101 have average periods of 90–110 ms.
+- ID 0x200 has an average period of 45–55 ms.
+- ID 0x700 has an average period of 950–1050 ms.
+- No CRC failures occur during normal operation.
+- All reserved signal values remain zero.
+- RPM varies approximately from 950 to 4,100 rpm.
+- Throttle varies approximately from 4% to 64%.
+- Each valid 0x100 produces one 0x101, excluding capture boundaries.
+- Steady-state `bus_load_pct` remains below 1.5%; the expected estimate is approximately 1.118%.
+- Both nodes operate continuously for 10 minutes without resetting or overheating.
 
-- 保持主机工具连接节点 B 的串口，同时用另一个 115200 串口终端连接节点 A。
-- 向节点 A 发送 `BADDLC3`：接下来的三条 0x100 使用 DLC 7。
-- 发送 `BADCRC3`：接下来的三条 0x100 带错误 CRC。
-- 发送 `PAUSE1000`：暂停 Engine Status 一秒，制造超时。
-- 发送 `NORMAL`：立即清除尚未完成的注入。
-- 拔掉一个 120 Ω（断电操作），重新测得约 120 Ω并记录；恢复后再上电。短线可能仍通信，因此只把它作为终端知识演示。
-- 暂时交换 CANH/CANL，再上电观察没有有效流量；立即断电并恢复。
-- **错误 DLC**：注入 ID 0x100、DLC 7，验证接收端拒绝且不使用其数据。
-- **错误 CRC**：翻转 Byte 0 的一位但保留旧 CRC，连续注入三次，验证扭矩锁定 60 Nm 且 reason bit7=1。
-- **发送超时**：停止节点 A，验证节点 B 在 300 ms 后进入 failsafe 并继续每 100 ms 发送 60 Nm。
-- 恢复节点 A，验证连续三条 CRC 正确且序号连续的帧后退出 failsafe。
+## E. Live visualization
 
-上述三个串口命令使总线级负向测试可以在基础两板方案上完成，不需要额外 USB-CAN 设备。
+```powershell
+.venv\Scripts\can-ecu.exe --dbc ..\config\vehicle.dbc.json --port COM_B --plot --duration 60 --output plotted.csv
+```
 
-不要在上电时改变面包板接线。完成故障注入后必须恢复正确接线。
+Acceptance criteria:
 
-## G. 作品集证据清单
+- RPM, throttle, and torque time-series panels update continuously.
+- The RPM–torque map records the moving operating point.
+- Torque generally rises with throttle and shows derating at high RPM.
+- The terminal displays bus load and safety status.
+- The CSV remains readable after the plotting window closes.
 
-- 清晰实物全景，标注 Engine ECU、Torque ECU、CANH/CANL 和两端终端。
-- 断电测得约 60 Ω的万用表照片。
-- PlatformIO 两个环境构建成功截图。
-- 60 秒采集最终统计和 CSV 前几行截图。
-- 三条时域曲线、Torque MAP、负载率截图或 30–60 秒屏幕录像。
-- 一页协议表和系统框图。
-- 可选：示波器差分波形、microSD 中 `canlog.csv`、故障注入前后对比。
+## F. Physical fault-injection test
 
-## 常见问题
+Keep the host logger connected to Node B. Open a second 115200-baud terminal for Node A.
 
-| 现象 | 优先检查 |
+### Wrong-DLC test
+
+Send:
+
+```text
+BADDLC3
+```
+
+Verify that the next three ID 0x100 frames have DLC 7, Node B rejects them, and Torque Limit switches to 60 Nm with reason bit 7 set.
+
+### Bad-CRC test
+
+Send:
+
+```text
+BADCRC3
+```
+
+Verify that the host reports three CRC failures, Node B does not use the corrupted signals, and Torque Limit switches to 60 Nm.
+
+### Engine-timeout test
+
+Send:
+
+```text
+PAUSE1000
+```
+
+Verify that Node B enters fail-safe mode 300 ms after the last valid Engine Status frame and continues broadcasting 60 Nm every 100 ms.
+
+### Recovery test
+
+Allow normal Engine Status transmission to resume. Verify that Node B leaves fail-safe mode only after three consecutive valid and sequential frames.
+
+Send `NORMAL` to clear any pending injection. These tests require no USB-CAN adapter.
+
+## G. Optional physical-layer experiments
+
+- With power disconnected, remove one termination and confirm that CANH-to-CANL resistance changes to approximately 120 Ω. Restore it before normal testing.
+- With power disconnected, swap CANH and CANL, then power the system and confirm that no valid traffic is received. Disconnect power and restore the correct wiring immediately.
+- If an oscilloscope is available, capture CANH, CANL, and the differential waveform and verify the 100 ms and 50 ms message activity.
+
+Never change breadboard wiring while the system is powered.
+
+## H. Portfolio evidence checklist
+
+- Labeled photograph of both ESP32 nodes, transceivers, CANH/CANL, and terminations
+- Multimeter photograph showing approximately 60 Ω with power disconnected
+- Successful PlatformIO build output for both firmware environments
+- Final statistics and representative rows from a 60-second hardware CSV
+- Live time-series and RPM–torque-map screenshot or short screen recording
+- Fault-injection evidence showing normal, fail-safe, and recovered states
+- One-page protocol table and network topology diagram
+- Optional oscilloscope waveform and microSD log
+
+## Troubleshooting
+
+| Symptom | Check first |
 |---|---|
-| 两边 ready 但无帧 | CANH/CANL、共地、TX/RX 方向、两端供电、500 kbit/s 一致 |
-| 只有 Engine 帧、无 Torque | 节点 B 是否收到；DLC/校验是否正确；节点 B 串口是否为所选端口 |
-| 串口 Permission denied | 关闭 PlatformIO Monitor、Arduino Serial Monitor 或其他占用程序 |
-| ESP32 反复重启 | USB 线/供电、3V3 短路、收发器接错、串口启动日志中的复位原因 |
-| 曲线窗口不出现 | 安装带 GUI 支持的 matplotlib，在本地桌面终端运行；先去掉 `--plot` 验证记录 |
-| 上传停在 Connecting | 按住 BOOT，写入开始后松开；确认选择正确 COM 端口 |
+| Both nodes start but no frames appear | CANH/CANL polarity, common ground, TX/RX direction, both transceiver supplies, and matching bit rate |
+| Engine frames appear but no Torque response | Node B reception, DLC/CRC status, and selected Node B COM port |
+| Serial port reports permission denied | Close PlatformIO Monitor, Arduino Serial Monitor, or any other program using the port |
+| ESP32 repeatedly resets | USB cable and supply, 3V3 short circuit, transceiver wiring, and reset reason in startup output |
+| Plot window does not appear | Confirm matplotlib installation and run from a local desktop session; retry without `--plot` first |
+| Upload remains at `Connecting...` | Hold BOOT until writing starts and verify the selected COM port |
