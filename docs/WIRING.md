@@ -61,7 +61,7 @@ With all power disconnected, measure resistance between CANH and CANL:
 | 3V3 | VCC; verify 3.3 V compatibility |
 | GND | GND |
 
-Format the card as FAT32 and set `ENABLE_SD_LOG=1` before rebuilding Node B.
+Format the card as FAT32 and build the `torque_logger_ecu_sd` PlatformIO environment before reflashing Node B.
 
 ## Safe power-up sequence
 
@@ -74,4 +74,3 @@ Format the card as FAT32 and set `ENABLE_SD_LOG=1` before rebuilding Node B.
 7. Open only Node B's serial port with the Python host tool.
 
 Use only one ESP32 power-input method at a time. For this project, USB power is the recommended option.
-

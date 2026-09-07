@@ -53,6 +53,5 @@
   <text x="525" y="326" text-anchor="middle" class="small">Torque MAP · Bus load · Safety monitor</text>
   <path d="M805 350 C735 350 720 298 660 298" class="arrow"/>
   <text x="730" y="325" text-anchor="middle" class="small">USB serial</text>
-  <text x="550" y="398" text-anchor="middle" class="small">Lower CAN ID wins arbitration: 0x100 → 0x101 → 0x200 → 0x700</text>
+  <text x="550" y="398" text-anchor="middle" class="small">Lower CAN ID wins arbitration: 0x100 → 0x101 → 0x200 → 0x701 → 0x702</text>
 </svg>
-

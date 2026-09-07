@@ -1,7 +1,9 @@
 import unittest
+from itertools import islice
 
 from can_ecu_tool.monitoring import BusLoadMonitor, EngineSafetyMonitor, worst_case_classic_can_bits
 from can_ecu_tool.protocol import Database, Frame, crc8_sae_j1850, parse_gateway_line
+from can_ecu_tool.sources import simulated_frames
 
 
 DEFINITION = {
@@ -91,6 +93,15 @@ class BusLoadTests(unittest.TestCase):
         for timestamp in range(0, 1000, 100):
             load = monitor.add(timestamp, 8)
         self.assertAlmostEqual(load, 0.27, places=2)
+
+
+class SimulationTests(unittest.TestCase):
+    def test_first_cycle_contains_unique_heartbeat_ids(self):
+        frames = list(islice(simulated_frames(), 5))
+        self.assertEqual(
+            {frame.arbitration_id for frame in frames},
+            {0x100, 0x101, 0x200, 0x701, 0x702},
+        )
 
 
 if __name__ == "__main__":

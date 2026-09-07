@@ -43,6 +43,22 @@ class CanDriver {
     memcpy(frame.data, msg.data, frame.dlc);
     return true;
   }
+
+  // Poll the controller state so a disconnected or badly terminated bus does
+  // not leave the ECU permanently bus-off after the wiring is repaired.
+  bool service() {
+    twai_status_info_t status = {};
+    if (twai_get_status_info(&status) != ESP_OK) return false;
+    if (status.state == TWAI_STATE_BUS_OFF) {
+      twai_initiate_recovery();
+      return false;
+    }
+    if (status.state == TWAI_STATE_STOPPED) {
+      twai_start();
+      return false;
+    }
+    return status.state == TWAI_STATE_RUNNING;
+  }
 };
 
 inline void printGatewayFrame(const CanFrame &frame) {
@@ -50,4 +66,3 @@ inline void printGatewayFrame(const CanFrame &frame) {
   for (uint8_t i = 0; i < frame.dlc; ++i) Serial.printf("%02X", frame.data[i]);
   Serial.println();
 }
-

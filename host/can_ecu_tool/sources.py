@@ -48,8 +48,8 @@ def simulated_frames(period_s: float = 0.05) -> Iterator[Frame]:
         yield Frame(now_ms + 4, 0x200, bytes(dashboard))
         dashboard_counter += 1
         if tick % 20 == 0:
-            yield Frame(now_ms + 6, 0x700, bytes((1, 1, int(elapsed) & 0xFF, (int(elapsed) >> 8) & 0xFF)))
-            yield Frame(now_ms + 7, 0x700, bytes((2, 1, int(elapsed) & 0xFF, (int(elapsed) >> 8) & 0xFF)))
+            yield Frame(now_ms + 6, 0x701, bytes((1, 1, int(elapsed) & 0xFF, (int(elapsed) >> 8) & 0xFF)))
+            yield Frame(now_ms + 7, 0x702, bytes((2, 1, int(elapsed) & 0xFF, (int(elapsed) >> 8) & 0xFF)))
         tick += 1
         time.sleep(period_s)
 

@@ -39,7 +39,10 @@ static void logToSd(const CanFrame &frame) {
 }
 
 static void emitOutgoing(uint32_t id, const uint8_t *data, uint8_t dlc) {
-  canBus.send(id, data, dlc);
+  if (!canBus.send(id, data, dlc)) {
+    Serial.printf("WARN: CAN transmit failed for ID %03lX\n", id);
+    return;
+  }
   CanFrame transmitted;
   transmitted.id = id;
   transmitted.dlc = dlc;
@@ -125,7 +128,7 @@ static void sendDashboardStatus() {
 static void sendHeartbeat() {
   uint8_t data[4] = {canproto::NODE_ID_TORQUE_LOGGER, 1, 0, 0};
   canproto::putU16LE(&data[2], static_cast<uint16_t>(millis() / 1000));
-  emitOutgoing(canproto::ID_NODE_HEARTBEAT, data, sizeof(data));
+  emitOutgoing(canproto::ID_TORQUE_HEARTBEAT, data, sizeof(data));
 }
 
 void setup() {
@@ -148,6 +151,7 @@ void setup() {
 }
 
 void loop() {
+  canBus.service();
   CanFrame frame;
   if (canBus.receive(frame, pdMS_TO_TICKS(10))) {
     ++rxCount;

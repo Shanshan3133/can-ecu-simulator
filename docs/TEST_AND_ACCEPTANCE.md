@@ -11,10 +11,10 @@ Create the Python environment from the `host` directory and run:
 
 Acceptance criteria:
 
-- All 11 automated tests pass.
+- All 12 automated tests pass.
 - The logger exits with code 0.
 - A 10-second capture contains approximately 420 frames.
-- IDs 0x100, 0x101, 0x200, and 0x700 are present.
+- IDs 0x100, 0x101, 0x200, 0x701, and 0x702 are present.
 - All protected application frames report `crc_ok=True`.
 - Tests cover the CRC standard vector, wrong CRC, wrong DLC, three-fault threshold, rolling-counter loss, 300 ms timeout, three-frame recovery, and bus-load calculation.
 
@@ -57,7 +57,7 @@ Acceptance criteria:
 - At least 2,200 rows are captured in 60 seconds.
 - IDs 0x100 and 0x101 have average periods of 90–110 ms.
 - ID 0x200 has an average period of 45–55 ms.
-- ID 0x700 has an average period of 950–1050 ms.
+- IDs 0x701 and 0x702 each have an average period of 950–1050 ms.
 - No CRC failures occur during normal operation.
 - All reserved signal values remain zero.
 - RPM varies approximately from 950 to 4,100 rpm.

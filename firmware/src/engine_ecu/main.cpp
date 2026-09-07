@@ -63,13 +63,17 @@ static void sendEngineStatus() {
     dlc = 7;
     --badDlcFramesRemaining;
   }
-  canBus.send(canproto::ID_ENGINE_STATUS, data, dlc);
+  if (!canBus.send(canproto::ID_ENGINE_STATUS, data, dlc)) {
+    Serial.println("WARN: Engine Status CAN transmit failed");
+  }
 }
 
 static void sendHeartbeat() {
   uint8_t data[4] = {canproto::NODE_ID_ENGINE, 1, 0, 0};
   canproto::putU16LE(&data[2], static_cast<uint16_t>(millis() / 1000));
-  canBus.send(canproto::ID_NODE_HEARTBEAT, data, sizeof(data));
+  if (!canBus.send(canproto::ID_ENGINE_HEARTBEAT, data, sizeof(data))) {
+    Serial.println("WARN: Engine heartbeat CAN transmit failed");
+  }
 }
 
 void setup() {
@@ -85,6 +89,7 @@ void setup() {
 }
 
 void loop() {
+  canBus.service();
   handleFaultInjectionCommands();
   const uint32_t now = millis();
   if (now - lastEngineFrameMs >= 100) {

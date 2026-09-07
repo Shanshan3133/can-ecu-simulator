@@ -7,7 +7,10 @@ namespace canproto {
 constexpr uint32_t ID_ENGINE_STATUS = 0x100;
 constexpr uint32_t ID_TORQUE_LIMIT = 0x101;
 constexpr uint32_t ID_DASHBOARD_STATUS = 0x200;
-constexpr uint32_t ID_NODE_HEARTBEAT = 0x700;
+// Separate heartbeat identifiers prevent two nodes from winning arbitration on
+// the same ID and then transmitting different payload bits simultaneously.
+constexpr uint32_t ID_ENGINE_HEARTBEAT = 0x701;
+constexpr uint32_t ID_TORQUE_HEARTBEAT = 0x702;
 
 constexpr uint8_t NODE_ID_ENGINE = 1;
 constexpr uint8_t NODE_ID_TORQUE_LOGGER = 2;

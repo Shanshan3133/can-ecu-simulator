@@ -13,7 +13,8 @@ When nodes begin transmitting simultaneously, CAN performs bitwise, non-destruct
 | 1 | 0x100 | ENGINE_STATUS | 100 ms | Engine ECU |
 | 2 | 0x101 | TORQUE_LIMIT | Approximately 100 ms | Torque ECU |
 | 3 | 0x200 | DASHBOARD_STATUS | 50 ms | Logical Dashboard ECU |
-| 4 | 0x700 | NODE_HEARTBEAT | 1000 ms | Both physical nodes |
+| 4 | 0x701 | ENGINE_HEARTBEAT | 1000 ms | Engine ECU |
+| 5 | 0x702 | TORQUE_HEARTBEAT | 1000 ms | Torque/Logger ECU |
 
 IDs 0x100 and 0x200 become ready together every 100 ms. ENGINE_STATUS wins arbitration, while DASHBOARD_STATUS waits and retries automatically without frame corruption.
 
@@ -73,11 +74,11 @@ The third logical ECU function runs on Node B and broadcasts display data every 
 | Byte 5, bits 4–7 and byte 6 | reserved_future | — | Transmitted as zero |
 | Byte 7 | crc | CRC-8/SAE-J1850 | Covers bytes 0–6 |
 
-## 0x700 — NODE_HEARTBEAT
+## 0x701 and 0x702 — Node heartbeats
 
-Both physical nodes transmit this four-byte message every 1000 ms:
+Each physical node has a unique heartbeat ID to prevent same-ID/different-data collisions. Both messages use the same four-byte layout and are transmitted every 1000 ms:
 
-- Byte 0: node ID; 1 = Engine, 2 = Torque/Logger
+- Byte 0: node ID; 1 = Engine on 0x701, 2 = Torque/Logger on 0x702
 - Byte 1: state; 1 = running
 - Bytes 2–3: uint16 little-endian uptime in seconds
 

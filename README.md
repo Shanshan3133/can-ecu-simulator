@@ -22,11 +22,12 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - Fail-safe torque limited to 60 Nm after three consecutive faults or a 300 ms timeout
 - Three consecutive valid frames required to leave fail-safe mode
 - Multi-rate traffic at 50 ms, 100 ms, and 1000 ms
-- CAN priority demonstration using IDs 0x100, 0x101, 0x200, and 0x700
+- CAN priority demonstration using IDs 0x100, 0x101, 0x200, 0x701, and 0x702
 - Built-in bad-CRC, wrong-DLC, and timeout fault injection
+- Bus-off recovery polling and truthful TX logging only after successful CAN transmission
 - CSV logging of raw frames, decoded signals, CRC status, bus load, and safety state
 - Live RPM, throttle, torque-limit, and RPM–torque-map visualization
-- Hardware-free traffic simulation and 11 automated host-side tests
+- Hardware-free traffic simulation and 12 automated host-side tests
 
 ## Repository layout
 
@@ -76,18 +77,19 @@ python -m venv .venv
 Expected result:
 
 - Four live panels: RPM, throttle, torque limit, and RPM–torque map
-- IDs 0x100, 0x101, 0x200, and 0x700 in `simulation.csv`
+- IDs 0x100, 0x101, 0x200, 0x701, and 0x702 in `simulation.csv`
 - `bad_crc=0`
 - Steady-state worst-case bus-load estimate near 1.118%
 - `safe=False` after the initial three-frame recovery sequence
-- All 11 automated tests pass
+- All 12 automated tests pass
 
 ## Build and flash the ESP32 nodes
 
-Install Visual Studio Code and the PlatformIO IDE extension, then open the `firmware` directory. The two PlatformIO environments are:
+Install Visual Studio Code and the PlatformIO IDE extension, then open the `firmware` directory. The available PlatformIO environments are:
 
 - `engine_ecu`
 - `torque_logger_ecu`
+- `torque_logger_ecu_sd` (optional SD-enabled build)
 
 Command-line equivalent:
 
@@ -135,7 +137,7 @@ See [TEST_AND_ACCEPTANCE.md](docs/TEST_AND_ACCEPTANCE.md) for the full validatio
 
 ## Optional microSD logging
 
-Change `-D ENABLE_SD_LOG=0` to `1` in the `torque_logger_ecu` environment in `firmware/platformio.ini`, connect the SPI module as documented, and reflash Node B. The firmware appends raw traffic to `/canlog.csv`. USB logging remains available.
+Connect the SPI module as documented and build/flash the `torque_logger_ecu_sd` environment. The firmware appends raw traffic to `/canlog.csv`. USB logging remains available.
 
 ## Bus-load budget
 
@@ -145,20 +147,34 @@ The static schedule produces a conservative worst-case estimate of **1.118%** at
 
 Completed in software:
 
+- All three PlatformIO environments compile successfully with pinned `espressif32@7.1.2` for the `esp32dev` target
+- Engine firmware: 275,157 bytes Flash (21.0%) and 21,528 bytes RAM (6.6%) in the verified build
+- Torque/Logger firmware: 276,721 bytes Flash (21.1%) and 21,560 bytes RAM (6.6%) in the verified build
+- The optional SD-enabled code path is compile-verified at 337,489 bytes Flash (25.7%) and 22,152 bytes RAM (6.8%); physical card writing remains hardware-dependent
 - DBC-style configuration validation
 - CRC-8/SAE-J1850 standard check vector
 - Parser, signal-scaling, wrong-DLC, bad-CRC, counter-loss, timeout, recovery, and load tests
-- Hardware-free simulation covering all four CAN IDs
+- Hardware-free simulation covering all five CAN IDs
 - Live plot path exercised with a non-interactive test backend
-- 11 automated tests passing
+- 12 automated tests passing
 
 Still requires physical completion:
 
-- Firmware compilation with PlatformIO on the selected ESP32 boards
+- Flashing and running the compiled firmware on the selected ESP32 boards
 - Wiring, termination, and power checks
 - Two-node communication and 10-minute stability test
 - Physical bad-CRC, wrong-DLC, and timeout fault injection
 - Optional oscilloscope or CAN-analyzer measurements
+
+## Current limitations
+
+- Firmware compilation is verified, but flashing, transceiver behavior, termination, physical timing, and long-duration operation cannot be proven without the two physical boards.
+- The database is intentionally DBC-style JSON, not a production Vector `.dbc` file.
+- The Dashboard ECU is a logical function sharing Node B's controller, not an independent third physical node.
+- Bus utilization is a conservative calculation from observed gateway frames, not a direct measurement from a CAN analyzer.
+- The 60 Nm fail-safe policy is an educational design choice, not a value derived from a real vehicle safety analysis or ISO 26262 process.
+- The SD-enabled firmware compiles, but card compatibility, write latency, power-loss behavior, and filesystem durability require physical testing.
+- Bus-off recovery is implemented and compile-verified, but its recovery timing still requires cable-disconnect testing on the real network.
 
 ## Portfolio summary
 

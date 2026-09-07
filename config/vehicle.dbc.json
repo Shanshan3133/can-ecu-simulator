@@ -36,8 +36,16 @@
         {"name": "reserved_future", "start_bit": 44, "length": 12, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "reserved"}
       ]
     },
-    "0x700": {
-      "name": "NODE_HEARTBEAT", "dlc": 4, "cycle_ms": 1000, "transmitter": "ALL",
+    "0x701": {
+      "name": "ENGINE_HEARTBEAT", "dlc": 4, "cycle_ms": 1000, "transmitter": "ENGINE_ECU",
+      "signals": [
+        {"name": "node_id", "start_bit": 0, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": ""},
+        {"name": "state", "start_bit": 8, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "enum"},
+        {"name": "uptime_s", "start_bit": 16, "length": 16, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "s"}
+      ]
+    },
+    "0x702": {
+      "name": "TORQUE_HEARTBEAT", "dlc": 4, "cycle_ms": 1000, "transmitter": "TORQUE_LOGGER_ECU",
       "signals": [
         {"name": "node_id", "start_bit": 0, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": ""},
         {"name": "state", "start_bit": 8, "length": 8, "byte_order": "little_endian", "signed": false, "scale": 1, "offset": 0, "unit": "enum"},
