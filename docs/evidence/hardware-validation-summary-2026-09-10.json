@@ -1,0 +1,39 @@
+{
+  "test_date": "2026-09-10",
+  "hardware": "Two ESP32-WROOM-32 boards and two SN65HVD230 transceivers",
+  "can_bitrate": 500000,
+  "endurance": {
+    "frames": 24109,
+    "gateway_span_seconds": 599.874,
+    "frame_counts_by_id": {
+      "0x100": 5999,
+      "0x101": 5999,
+      "0x200": 10911,
+      "0x701": 600,
+      "0x702": 600
+    },
+    "bad_crc_dlc8_frames": 0,
+    "wrong_dlc7_frames": 0,
+    "safe_state_rows": 8,
+    "peak_estimated_bus_load_pct": 1.145
+  },
+  "fault_injection": {
+    "frames": 18324,
+    "gateway_span_seconds": 456.553,
+    "frame_counts_by_id": {
+      "0x100": 4556,
+      "0x101": 4560,
+      "0x200": 8295,
+      "0x701": 456,
+      "0x702": 457
+    },
+    "bad_crc_dlc8_frames": 9,
+    "wrong_dlc7_frames": 3,
+    "safe_state_rows": 126,
+    "peak_estimated_bus_load_pct": 1.145,
+    "observed_sequence_gaps": 5,
+    "direct_counter_jump_injections": 1,
+    "cli_reported_crc_failures": 9,
+    "timeout_failsafe_observed": true
+  }
+}

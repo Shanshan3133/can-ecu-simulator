@@ -10,6 +10,7 @@ uint32_t lastHeartbeatMs = 0;
 uint32_t pauseUntilMs = 0;
 uint8_t badCrcFramesRemaining = 0;
 uint8_t badDlcFramesRemaining = 0;
+bool counterJumpPending = false;
 
 static void handleFaultInjectionCommands() {
   if (!Serial.available()) return;
@@ -22,16 +23,20 @@ static void handleFaultInjectionCommands() {
   } else if (command == "BADDLC3") {
     badDlcFramesRemaining = 3;
     Serial.println("FAULT: next 3 Engine Status frames use DLC 7");
+  } else if (command == "BADCOUNTER3") {
+    counterJumpPending = true;
+    Serial.println("FAULT: next Engine Status rolling counter skips 3 values");
   } else if (command == "PAUSE1000") {
     pauseUntilMs = millis() + 1000;
     Serial.println("FAULT: Engine Status paused for 1000 ms");
   } else if (command == "NORMAL") {
     badCrcFramesRemaining = 0;
     badDlcFramesRemaining = 0;
+    counterJumpPending = false;
     pauseUntilMs = 0;
     Serial.println("FAULT: cleared");
   } else {
-    Serial.println("Commands: BADCRC3, BADDLC3, PAUSE1000, NORMAL");
+    Serial.println("Commands: BADCRC3, BADDLC3, BADCOUNTER3, PAUSE1000, NORMAL");
   }
 }
 
@@ -51,6 +56,10 @@ static void sendEngineStatus() {
   uint8_t data[8] = {0};
   canproto::putU16LE(data, rpmRaw);
   data[2] = throttleRaw;
+  if (counterJumpPending) {
+    rollingCounter = static_cast<uint8_t>((rollingCounter + 3) & 0x0F);
+    counterJumpPending = false;
+  }
   data[3] = rollingCounter++ & 0x0F;
   data[4] = 90;  // coolant temperature: raw 90 means 50 deg C with -40 offset
   data[7] = canproto::crc8SaeJ1850(data, 7);
@@ -85,7 +94,7 @@ void setup() {
     while (true) delay(1000);
   }
   Serial.println("ENGINE_ECU ready: 500 kbit/s, status every 100 ms");
-  Serial.println("Fault commands: BADCRC3, BADDLC3, PAUSE1000, NORMAL");
+  Serial.println("Fault commands: BADCRC3, BADDLC3, BADCOUNTER3, PAUSE1000, NORMAL");
 }
 
 void loop() {

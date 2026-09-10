@@ -8,11 +8,15 @@ A portfolio-ready automotive CAN 2.0A network built with two low-cost ESP32 deve
 
 ## Physical hardware evidence
 
-The two-node network has been assembled and verified on a physical ESP32/SN65HVD230 bench. The retained nominal-traffic trace contains **289 real CAN frames**, all five designed identifiers, **zero CRC failures**, exact 100 ms and 1,000 ms application periods, and a peak estimated bus load of **1.118%**.
+The two-node network has been assembled and verified on a physical ESP32/SN65HVD230 bench. A completed ten-minute capture contains **24,109 real CAN frames**, all five designed identifiers, and **zero CRC failures**. Separate physical fault injection verifies bad-CRC and wrong-DLC rejection, rolling-counter loss detection, timeout fail-safe behavior, the 60 Nm safe command, and automatic recovery.
 
 <img src="docs/evidence/hardware-bench.jpg" alt="Physical two-node ESP32 CAN bench" width="850">
 
 ![Decoded telemetry captured from the physical CAN bench](docs/evidence/hardware-telemetry.png)
+
+![Ten-minute physical CAN endurance result](docs/evidence/hardware-endurance-10min.png)
+
+![Physical CAN fault-injection result](docs/evidence/hardware-fault-injection.png)
 
 See [Physical Hardware Results](docs/HARDWARE_RESULTS.md) for the measured frame counts, timing results, original CSV, and the scope of the completed validation.
 
@@ -35,7 +39,7 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - Three consecutive valid frames required to leave fail-safe mode
 - Multi-rate traffic at 50 ms, 100 ms, and 1000 ms
 - CAN priority demonstration using IDs 0x100, 0x101, 0x200, 0x701, and 0x702
-- Built-in bad-CRC, wrong-DLC, and timeout fault injection
+- Built-in bad-CRC, wrong-DLC, rolling-counter, and timeout fault injection
 - Bus-off recovery polling and truthful TX logging only after successful CAN transmission
 - CSV logging of raw frames, decoded signals, CRC status, bus load, and safety state
 - Live RPM, throttle, torque-limit, and RPM–torque-map visualization
@@ -57,6 +61,8 @@ docs/network_topology.svg        Network architecture diagram
 docs/WIRING.md                   Wiring and power-up instructions
 docs/PROTOCOL.md                 Message layout, CRC, arbitration, and safety design
 docs/TEST_AND_ACCEPTANCE.md       Validation procedure and measurable criteria
+docs/HARDWARE_RESULTS.md          Measured physical-bench evidence and limits
+docs/HARDWARE_TEST_PROCEDURE_CN.md Chinese step-by-step reproduction guide
 ```
 
 ## Hardware bill of materials
@@ -144,6 +150,7 @@ Keep the logger connected to Node B and open a separate 115200-baud serial termi
 |---|---|---|
 | `BADCRC3` | Corrupt the next three Engine Status CRC bytes | Enter fail-safe and command 60 Nm |
 | `BADDLC3` | Send the next three Engine Status frames with DLC 7 | Reject frames and enter fail-safe |
+| `BADCOUNTER3` | Skip three Engine Status rolling-counter values | Detect sequence loss and enter fail-safe |
 | `PAUSE1000` | Stop Engine Status for one second | Detect 300 ms timeout and enter fail-safe |
 | `NORMAL` | Clear pending injection | Resume normal generation; recover after valid sequence |
 
@@ -164,6 +171,9 @@ Completed on physical hardware:
 - Both ESP32 firmware images flashed and booted successfully through CP210x USB interfaces
 - Two SN65HVD230 nodes exchanged IDs `0x100`, `0x101`, `0x200`, `0x701`, and `0x702` at 500 kbit/s
 - Retained capture: 289 frames over 7.131 seconds of gateway time with zero CRC failures
+- Ten-minute endurance capture: 24,109 frames over 599.874 seconds with zero CRC failures
+- Physical fault injection: 9 bad-CRC frames, 3 wrong-DLC frames, one direct rolling-counter jump, and a one-second Engine Status pause all detected
+- Fail-safe behavior physically observed, including 33 recorded 60 Nm Torque Limit frames and recovery after valid traffic resumed
 - Observed mean periods: 100 ms for `0x100`/`0x101`, 54.02 ms for `0x200`, and 1,000 ms for both heartbeats
 - Host safety model recovered from its startup fail-safe after three valid Engine Status frames
 - Peak estimated bus load reached the expected 1.118%
@@ -171,7 +181,7 @@ Completed on physical hardware:
 Completed in software:
 
 - All three PlatformIO environments compile successfully with pinned `espressif32@7.1.2` for the `esp32dev` target
-- Engine firmware: 275,157 bytes Flash (21.0%) and 21,528 bytes RAM (6.6%) in the verified build
+- Engine firmware: 275,337 bytes Flash (21.0%) and 21,528 bytes RAM (6.6%) in the verified build
 - Torque/Logger firmware: 276,721 bytes Flash (21.1%) and 21,560 bytes RAM (6.6%) in the verified build
 - The optional SD-enabled code path is compile-verified at 337,489 bytes Flash (25.7%) and 22,152 bytes RAM (6.8%); physical card writing remains hardware-dependent
 - DBC-style configuration validation
@@ -183,13 +193,13 @@ Completed in software:
 
 Remaining physical validation:
 
-- A fresh 60-second non-plotting capture and the 10-minute stability test
-- Physical bad-CRC, wrong-DLC, and timeout fault injection
 - Optional oscilloscope or CAN-analyzer measurements
+- Physical bus-off recovery timing
+- Optional microSD write, latency, and power-loss tests
 
 ## Current limitations
 
-- Nominal transceiver behavior and physical two-node communication are verified. The retained plotted session covers 7.131 seconds of gateway time, so it is not presented as the full 60-second or 10-minute acceptance run.
+- Nominal transceiver behavior, physical two-node communication, a ten-minute endurance run, and the documented application-level fault injections are verified.
 - The database is intentionally DBC-style JSON, not a production Vector `.dbc` file.
 - The Dashboard ECU is a logical function sharing Node B's controller, not an independent third physical node.
 - Bus utilization is a conservative calculation from observed gateway frames, not a direct measurement from a CAN analyzer.
