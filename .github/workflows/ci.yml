@@ -1,0 +1,62 @@
+name: Continuous Integration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    name: Host tests and evidence
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: host/pyproject.toml
+
+      - name: Install host tool
+        run: python -m pip install --upgrade pip && python -m pip install -e ./host
+
+      - name: Run automated tests
+        run: python -m unittest discover -s host/tests -v
+
+      - name: Exercise simulated capture
+        run: can-ecu --dbc config/vehicle.dbc.json --simulate --duration 2 --output /tmp/simulation.csv
+
+      - name: Rebuild retained hardware evidence plot
+        run: >-
+          python host/plot_hardware.py
+          docs/evidence/hardware-capture-2026-09-09.csv
+          --output /tmp/hardware-telemetry.png
+
+  firmware-builds:
+    name: ESP32 firmware builds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install PlatformIO Core
+        run: python -m pip install --upgrade platformio
+
+      - name: Compile all firmware environments
+        run: >-
+          pio run -d firmware
+          -e engine_ecu
+          -e torque_logger_ecu
+          -e torque_logger_ecu_sd

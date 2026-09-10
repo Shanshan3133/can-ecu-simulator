@@ -1,5 +1,7 @@
 # CAN Bus ECU Simulator and Data Logger
 
+[![Continuous Integration](https://github.com/Shanshan3133/can-ecu-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/Shanshan3133/can-ecu-simulator/actions/workflows/ci.yml)
+
 ![CAN ECU network topology](docs/network_topology.svg)
 
 A portfolio-ready automotive CAN 2.0A network built with two low-cost ESP32 development boards and two 3.3 V CAN transceivers. The project demonstrates embedded firmware, message and signal design, safety-oriented communication monitoring, data logging, protocol decoding, automated validation, and real-time visualization.
@@ -39,6 +41,7 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - Live RPM, throttle, torque-limit, and RPM–torque-map visualization
 - Hardware-free traffic simulation and 12 automated host-side tests
 - Physical two-node CAN communication verified with a retained decoded trace
+- GitHub Actions automatically tests the host tool, exercises simulation and evidence plotting, and compiles all three firmware environments
 
 ## Repository layout
 
