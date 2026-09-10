@@ -15,11 +15,12 @@ from .sources import serial_frames, simulated_frames
 
 
 class LivePlot:
-    def __init__(self, window: int = 200):
+    def __init__(self, window: int = 200, refresh_s: float = 0.5):
         import matplotlib.pyplot as plt
 
         self.plt = plt
         self.window = window
+        self.refresh_s = refresh_s
         self.x: dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=window))
         self.y: dict[str, deque[float]] = defaultdict(lambda: deque(maxlen=window))
         self.fig, axes = plt.subplots(2, 2, figsize=(11, 7))
@@ -62,7 +63,7 @@ class LivePlot:
                 self.map_rpm.append(self.latest_rpm)
                 self.map_torque.append(self.latest_torque)
         now = time.monotonic()
-        if now - self.last_draw < 0.1:
+        if now - self.last_draw < self.refresh_s:
             return
         for key, line in self.lines.items():
             line.set_data(self.x[key], self.y[key])
@@ -90,19 +91,27 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--baud", type=int, default=115200)
     parser.add_argument("--output", type=Path, help="CSV destination (default: timestamped file)")
     parser.add_argument("--plot", action="store_true", help="show live RPM/throttle/torque plots")
+    parser.add_argument(
+        "--plot-refresh",
+        type=float,
+        default=0.5,
+        help="minimum seconds between GUI redraws (default: 0.5)",
+    )
     parser.add_argument("--duration", type=float, default=0, help="stop after N seconds; 0 runs until Ctrl+C")
     return parser
 
 
 def main() -> int:
     args = build_parser().parse_args()
+    if args.plot_refresh <= 0:
+        raise SystemExit("--plot-refresh must be greater than zero")
     database = Database.load(args.dbc)
     bus_load = BusLoadMonitor(database.definition["bus"]["bitrate"])
     safety = EngineSafetyMonitor()
     output = args.output or Path(f"can_capture_{datetime.now():%Y%m%d_%H%M%S}.csv")
     output.parent.mkdir(parents=True, exist_ok=True)
     frames = simulated_frames() if args.simulate else serial_frames(args.port, args.baud)
-    plot = LivePlot() if args.plot else None
+    plot = LivePlot(refresh_s=args.plot_refresh) if args.plot else None
     started = time.monotonic()
     count = 0
     bad_crc = 0

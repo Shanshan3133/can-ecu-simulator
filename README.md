@@ -4,6 +4,16 @@
 
 A portfolio-ready automotive CAN 2.0A network built with two low-cost ESP32 development boards and two 3.3 V CAN transceivers. The project demonstrates embedded firmware, message and signal design, safety-oriented communication monitoring, data logging, protocol decoding, automated validation, and real-time visualization.
 
+## Physical hardware evidence
+
+The two-node network has been assembled and verified on a physical ESP32/SN65HVD230 bench. The retained nominal-traffic trace contains **289 real CAN frames**, all five designed identifiers, **zero CRC failures**, exact 100 ms and 1,000 ms application periods, and a peak estimated bus load of **1.118%**.
+
+<img src="docs/evidence/hardware-bench.jpg" alt="Physical two-node ESP32 CAN bench" width="850">
+
+![Decoded telemetry captured from the physical CAN bench](docs/evidence/hardware-telemetry.png)
+
+See [Physical Hardware Results](docs/HARDWARE_RESULTS.md) for the measured frame counts, timing results, original CSV, and the scope of the completed validation.
+
 The network operates at **500 kbit/s** with standard 11-bit identifiers:
 
 - **Node A — Engine ECU:** simulates a repeatable drive cycle and broadcasts RPM, throttle position, coolant temperature, a rolling counter, and CRC every 100 ms.
@@ -28,6 +38,7 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - CSV logging of raw frames, decoded signals, CRC status, bus load, and safety state
 - Live RPM, throttle, torque-limit, and RPM–torque-map visualization
 - Hardware-free traffic simulation and 12 automated host-side tests
+- Physical two-node CAN communication verified with a retained decoded trace
 
 ## Repository layout
 
@@ -111,10 +122,10 @@ Connect the host tool to Node B's USB serial port:
 
 ```powershell
 cd host
-.venv\Scripts\can-ecu.exe --dbc ..\config\vehicle.dbc.json --port COM_B --plot --duration 60 --output hardware_60s.csv
+.venv\Scripts\can-ecu.exe --dbc ..\config\vehicle.dbc.json --port COM_B --duration 60 --output hardware_60s.csv
 ```
 
-Close PlatformIO Serial Monitor before running the command because only one application can own a serial port. The gateway format is:
+Use the non-plotting command for an acceptance capture so GUI rendering cannot reduce serial-drain throughput. Add `--plot` for an interactive demonstration; live redraws are throttled to 2 Hz by default and can be adjusted with `--plot-refresh`. Close PlatformIO Serial Monitor before running either command because only one application can own a serial port. The gateway format is:
 
 ```text
 @CAN,1234,100,8,204E64015A0000A7
@@ -145,6 +156,15 @@ The static schedule produces a conservative worst-case estimate of **1.118%** at
 
 ## Verification status
 
+Completed on physical hardware:
+
+- Both ESP32 firmware images flashed and booted successfully through CP210x USB interfaces
+- Two SN65HVD230 nodes exchanged IDs `0x100`, `0x101`, `0x200`, `0x701`, and `0x702` at 500 kbit/s
+- Retained capture: 289 frames over 7.131 seconds of gateway time with zero CRC failures
+- Observed mean periods: 100 ms for `0x100`/`0x101`, 54.02 ms for `0x200`, and 1,000 ms for both heartbeats
+- Host safety model recovered from its startup fail-safe after three valid Engine Status frames
+- Peak estimated bus load reached the expected 1.118%
+
 Completed in software:
 
 - All three PlatformIO environments compile successfully with pinned `espressif32@7.1.2` for the `esp32dev` target
@@ -158,17 +178,15 @@ Completed in software:
 - Live plot path exercised with a non-interactive test backend
 - 12 automated tests passing
 
-Still requires physical completion:
+Remaining physical validation:
 
-- Flashing and running the compiled firmware on the selected ESP32 boards
-- Wiring, termination, and power checks
-- Two-node communication and 10-minute stability test
+- A fresh 60-second non-plotting capture and the 10-minute stability test
 - Physical bad-CRC, wrong-DLC, and timeout fault injection
 - Optional oscilloscope or CAN-analyzer measurements
 
 ## Current limitations
 
-- Firmware compilation is verified, but flashing, transceiver behavior, termination, physical timing, and long-duration operation cannot be proven without the two physical boards.
+- Nominal transceiver behavior and physical two-node communication are verified. The retained plotted session covers 7.131 seconds of gateway time, so it is not presented as the full 60-second or 10-minute acceptance run.
 - The database is intentionally DBC-style JSON, not a production Vector `.dbc` file.
 - The Dashboard ECU is a logical function sharing Node B's controller, not an independent third physical node.
 - Bus utilization is a conservative calculation from observed gateway frames, not a direct measurement from a CAN analyzer.
@@ -178,7 +196,7 @@ Still requires physical completion:
 
 ## Portfolio summary
 
-> Designed and implemented a two-node 500 kbit/s CAN 2.0A ECU network on ESP32, including CRC-8/SAE-J1850 protection, rolling-counter and timeout-based fail-safe torque control, multi-rate arbitration, serial/SD logging, custom DBC-style decoding, bus-load monitoring, automated fault validation, and live torque-map visualization.
+> Designed, implemented, and physically validated a two-node 500 kbit/s CAN 2.0A ECU network on ESP32, including CRC-8/SAE-J1850 protection, rolling-counter and timeout-based fail-safe torque control, multi-rate arbitration, serial/SD logging, custom DBC-style decoding, bus-load monitoring, automated fault validation, and live telemetry visualization.
 
 This project is intended for bench education and portfolio demonstration. It must not be connected directly to a production vehicle or used in a safety-critical system.
 

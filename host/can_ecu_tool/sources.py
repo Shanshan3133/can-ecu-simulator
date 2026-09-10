@@ -57,7 +57,24 @@ def simulated_frames(period_s: float = 0.05) -> Iterator[Frame]:
 def serial_frames(port: str, baudrate: int = 115200) -> Iterator[Frame]:
     import serial
 
-    with serial.Serial(port, baudrate, timeout=1) as connection:
+    # Configure the modem-control lines before opening the port.  On common
+    # ESP32 development boards DTR/RTS drive the automatic reset/boot circuit;
+    # pyserial's defaults can otherwise leave the board reset or in the ROM
+    # downloader instead of running the CAN gateway firmware.
+    connection = serial.Serial()
+    connection.port = port
+    connection.baudrate = baudrate
+    connection.timeout = 1
+    connection.dtr = False
+    connection.rts = False
+    connection.open()
+    # Windows/CP210x can briefly re-assert these signals while opening the
+    # handle, so release them again after the port is open and allow an ESP32
+    # that was reset by the transition to finish booting.
+    connection.dtr = False
+    connection.rts = False
+    time.sleep(2.0)
+    with connection:
         while True:
             line = connection.readline().decode("ascii", errors="replace")
             if not line:

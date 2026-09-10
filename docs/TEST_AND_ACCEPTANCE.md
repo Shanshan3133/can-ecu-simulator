@@ -44,6 +44,10 @@ A single node may report unsuccessful CAN transmissions because normal CAN requi
 
 ## D. Two-node communication test
 
+### Recorded hardware checkpoint — September 9, 2026
+
+A physical two-node bench produced a retained 289-frame trace spanning 7.131 seconds of gateway time. It contained all five designed CAN identifiers, zero CRC failures, 100 ms mean periods for IDs `0x100` and `0x101`, a 54.02 ms mean period for ID `0x200`, 1,000 ms mean periods for both heartbeat IDs, and a 1.118% peak estimated bus load. This verifies nominal physical communication and decoding, but it does not replace the full 60-second non-plotting capture or 10-minute endurance criterion below. See [Physical Hardware Results](HARDWARE_RESULTS.md).
+
 1. Close all serial monitors.
 2. Power both nodes.
 3. Run a 60-second capture from Node B:

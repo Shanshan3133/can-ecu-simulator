@@ -1,7 +1,10 @@
 .pio/
 .venv/
+.vscode/
 __pycache__/
 .pytest_cache/
+*.egg-info/
 *.pyc
 *.csv
-
+!docs/evidence/*.csv
+host/*.png
