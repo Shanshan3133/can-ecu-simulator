@@ -60,6 +60,8 @@ class SafetyTests(unittest.TestCase):
             monitor.observe(timestamp, 0, integrity_ok=False)
         self.assertTrue(monitor.state.failsafe)
         self.assertEqual(monitor.state.consecutive_faults, 3)
+        self.assertEqual(monitor.state.bad_crc_frames, 3)
+        self.assertEqual(monitor.state.bad_dlc_frames, 0)
 
     def test_counter_jump_of_three_forces_safe_state(self):
         monitor = EngineSafetyMonitor(valid_to_recover=1)
@@ -67,6 +69,13 @@ class SafetyTests(unittest.TestCase):
         self.assertFalse(monitor.state.failsafe)
         monitor.observe(400, 4, integrity_ok=True)
         self.assertTrue(monitor.state.failsafe)
+        self.assertEqual(monitor.state.counter_gap_events, 1)
+
+    def test_wrong_dlc_has_a_separate_counter(self):
+        monitor = EngineSafetyMonitor()
+        monitor.observe(0, 0, integrity_ok=False, dlc_ok=False)
+        self.assertEqual(monitor.state.bad_crc_frames, 0)
+        self.assertEqual(monitor.state.bad_dlc_frames, 1)
 
     def test_engine_timeout_forces_safe_state(self):
         monitor = EngineSafetyMonitor(valid_to_recover=1)

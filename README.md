@@ -42,8 +42,9 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - Built-in bad-CRC, wrong-DLC, rolling-counter, and timeout fault injection
 - Bus-off recovery polling and truthful TX logging only after successful CAN transmission
 - CSV logging of raw frames, decoded signals, CRC status, bus load, and safety state
+- Separate live counters for bad CRC, wrong DLC, and rolling-counter gaps
 - Live RPM, throttle, torque-limit, and RPM–torque-map visualization
-- Hardware-free traffic simulation and 12 automated host-side tests
+- Hardware-free traffic simulation and 13 automated host-side tests
 - Physical two-node CAN communication verified with a retained decoded trace
 - GitHub Actions automatically tests the host tool, exercises simulation and evidence plotting, and compiles all three firmware environments
 
@@ -98,10 +99,10 @@ Expected result:
 
 - Four live panels: RPM, throttle, torque limit, and RPM–torque map
 - IDs 0x100, 0x101, 0x200, 0x701, and 0x702 in `simulation.csv`
-- `bad_crc=0`
+- `bad_crc=0`, `bad_dlc=0`, and `counter_gap=0`
 - Steady-state worst-case bus-load estimate near 1.118%
 - `safe=False` after the initial three-frame recovery sequence
-- All 12 automated tests pass
+- All 13 automated tests pass
 
 ## Build and flash the ESP32 nodes
 
@@ -181,7 +182,7 @@ Completed on physical hardware:
 Completed in software:
 
 - All three PlatformIO environments compile successfully with pinned `espressif32@7.1.2` for the `esp32dev` target
-- Engine firmware: 275,337 bytes Flash (21.0%) and 21,528 bytes RAM (6.6%) in the verified build
+- Engine firmware: 275,373 bytes Flash (21.0%) and 21,528 bytes RAM (6.6%) in the verified build
 - Torque/Logger firmware: 276,721 bytes Flash (21.1%) and 21,560 bytes RAM (6.6%) in the verified build
 - The optional SD-enabled code path is compile-verified at 337,489 bytes Flash (25.7%) and 22,152 bytes RAM (6.8%); physical card writing remains hardware-dependent
 - DBC-style configuration validation
@@ -189,7 +190,7 @@ Completed in software:
 - Parser, signal-scaling, wrong-DLC, bad-CRC, counter-loss, timeout, recovery, and load tests
 - Hardware-free simulation covering all five CAN IDs
 - Live plot path exercised with a non-interactive test backend
-- 12 automated tests passing
+- 13 automated tests passing
 
 Remaining physical validation:
 

@@ -34,6 +34,9 @@ class SafetyState:
     consecutive_valid: int = 0
     expected_counter: int | None = None
     last_valid_ms: int | None = None
+    bad_crc_frames: int = 0
+    bad_dlc_frames: int = 0
+    counter_gap_events: int = 0
 
 
 class EngineSafetyMonitor:
@@ -46,11 +49,17 @@ class EngineSafetyMonitor:
         self.state = SafetyState()
 
     def observe(self, timestamp_ms: int, counter: int, integrity_ok: bool, dlc_ok: bool = True) -> SafetyState:
-        if not integrity_ok or not dlc_ok:
+        if not dlc_ok:
+            self.state.bad_dlc_frames += 1
+            self.state.consecutive_faults += 1
+            self.state.consecutive_valid = 0
+        elif not integrity_ok:
+            self.state.bad_crc_frames += 1
             self.state.consecutive_faults += 1
             self.state.consecutive_valid = 0
         elif self.state.expected_counter is not None and counter != self.state.expected_counter:
             missed = (counter - self.state.expected_counter) & 0x0F
+            self.state.counter_gap_events += 1
             self.state.consecutive_faults += max(1, missed)
             self.state.consecutive_valid = 0
             self.state.expected_counter = (counter + 1) & 0x0F

@@ -115,6 +115,7 @@ def main() -> int:
     started = time.monotonic()
     count = 0
     bad_crc = 0
+    bad_dlc = 0
 
     print(f"logging to {output.resolve()} (Ctrl+C to stop)")
     try:
@@ -129,6 +130,7 @@ def main() -> int:
                     decoded = None
                     name, checksum, signals = "INVALID", False, {"error": str(exc)}
                     if frame.arbitration_id == 0x100:
+                        bad_dlc += 1
                         safety.observe(frame.timestamp_ms, 0, False, dlc_ok=False)
                 else:
                     name, checksum, signals = "UNKNOWN", "", {}
@@ -157,15 +159,19 @@ def main() -> int:
                 count += 1
                 if count % 20 == 0:
                     print(
-                        f"frames={count} bad_crc={bad_crc} load={load_pct:.2f}% "
+                        f"frames={count} bad_crc={bad_crc} bad_dlc={bad_dlc} "
+                        f"counter_gap={safety.state.counter_gap_events} load={load_pct:.2f}% "
                         f"safe={safety.state.failsafe} last={name} {signals}"
                     )
                 if args.duration and time.monotonic() - started >= args.duration:
                     break
     except KeyboardInterrupt:
         pass
-    print(f"done: {count} frames, {bad_crc} CRC failures, {output.resolve()}")
-    return 0 if bad_crc == 0 else 2
+    print(
+        f"done: {count} frames, {bad_crc} CRC failures, {bad_dlc} DLC failures, "
+        f"{safety.state.counter_gap_events} counter gaps, {output.resolve()}"
+    )
+    return 0 if bad_crc == 0 and bad_dlc == 0 and safety.state.counter_gap_events == 0 else 2
 
 
 if __name__ == "__main__":

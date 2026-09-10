@@ -11,7 +11,7 @@ Create the Python environment from the `host` directory and run:
 
 Acceptance criteria:
 
-- All 12 automated tests pass.
+- All 13 automated tests pass.
 - The logger exits with code 0.
 - A 10-second capture contains approximately 420 frames.
 - IDs 0x100, 0x101, 0x200, 0x701, and 0x702 are present.

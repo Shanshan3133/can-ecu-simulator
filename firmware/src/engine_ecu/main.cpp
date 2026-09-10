@@ -16,6 +16,7 @@ static void handleFaultInjectionCommands() {
   if (!Serial.available()) return;
   String command = Serial.readStringUntil('\n');
   command.trim();
+  if (command.length() == 0) return;
   command.toUpperCase();
   if (command == "BADCRC3") {
     badCrcFramesRemaining = 3;
