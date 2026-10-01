@@ -16,6 +16,7 @@ CASES = {
     "can_bit_timing": ("can_bit_timing.v",),
     "can_destuffer": ("can_destuffer.v",),
     "can_error_state": ("can_error_state.v",),
+    "can_fault_paths": ("can_destuffer.v", "can_rx.v", "can_tx.v"),
     "can_controller_core": (
         "can_destuffer.v",
         "can_rx.v",

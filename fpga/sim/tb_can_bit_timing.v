@@ -3,6 +3,8 @@
 module tb_can_bit_timing;
     reg clk = 1'b0;
     reg rst = 1'b1;
+    reg hard_sync = 1'b0;
+    reg resync = 1'b0;
     wire tq_tick;
     wire bit_start;
     wire sample_point;
@@ -20,7 +22,8 @@ module tb_can_bit_timing;
     can_bit_timing #(
         .CLOCK_HZ(40), .BIT_RATE(1), .TQ_PER_BIT(8), .SAMPLE_TQ(6)
     ) dut (
-        .clk(clk), .rst(rst), .tq_tick(tq_tick), .bit_start(bit_start),
+        .clk(clk), .rst(rst), .hard_sync(hard_sync), .resync(resync),
+        .tq_tick(tq_tick), .bit_start(bit_start),
         .sample_point(sample_point), .bit_end(bit_end), .tq_index(tq_index)
     );
 
@@ -57,7 +60,21 @@ module tb_can_bit_timing;
             $fatal(1);
         end
 
-        $display("PASS: bit timing generated 3 complete nominal bits");
+        @(negedge clk); hard_sync = 1;
+        @(posedge clk);
+        #1;
+        if (tq_index != 0 || !bit_start) begin
+            $display("FAIL: hard synchronization did not establish bit start");
+            $fatal(1);
+        end
+        @(negedge clk); hard_sync = 0;
+
+        repeat (18) @(posedge clk);
+        @(negedge clk); resync = 1;
+        @(posedge clk);
+        @(negedge clk); resync = 0;
+
+        $display("PASS: nominal timing, hard synchronization, and resynchronization");
         $finish;
     end
 

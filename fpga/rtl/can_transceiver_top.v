@@ -32,11 +32,16 @@ module can_transceiver_top #(
 );
     reg rx_meta;
     reg rx_sync;
+    reg rx_previous;
+    reg [3:0] idle_recessive_bits;
     wire sample_point;
     wire unused_tq_tick;
     wire unused_bit_start;
     wire unused_bit_end;
     wire [7:0] unused_tq_index;
+    wire falling_edge = rx_previous && !rx_sync;
+    wire hard_sync = falling_edge && (idle_recessive_bits >= 11);
+    wire resync = falling_edge && (idle_recessive_bits < 11);
     wire unused_arbitration_lost;
     wire unused_crc_error;
     wire unused_stuff_error;
@@ -48,9 +53,20 @@ module can_transceiver_top #(
         if (rst) begin
             rx_meta <= 1'b1;
             rx_sync <= 1'b1;
+            rx_previous <= 1'b1;
+            idle_recessive_bits <= 4'd11;
         end else begin
             rx_meta <= can_rxd;
             rx_sync <= rx_meta;
+            rx_previous <= rx_sync;
+            if (sample_point) begin
+                if (rx_sync) begin
+                    if (idle_recessive_bits < 11)
+                        idle_recessive_bits <= idle_recessive_bits + 1'b1;
+                end else begin
+                    idle_recessive_bits <= 0;
+                end
+            end
         end
     end
 
@@ -58,7 +74,8 @@ module can_transceiver_top #(
         .CLOCK_HZ(CLOCK_HZ), .BIT_RATE(BIT_RATE),
         .TQ_PER_BIT(TQ_PER_BIT), .SAMPLE_TQ(SAMPLE_TQ)
     ) timing (
-        .clk(clk), .rst(rst), .tq_tick(unused_tq_tick),
+        .clk(clk), .rst(rst), .hard_sync(hard_sync), .resync(resync),
+        .tq_tick(unused_tq_tick),
         .bit_start(unused_bit_start), .sample_point(sample_point),
         .bit_end(unused_bit_end), .tq_index(unused_tq_index)
     );
