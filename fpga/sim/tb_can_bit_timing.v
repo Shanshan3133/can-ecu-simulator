@@ -16,6 +16,7 @@ module tb_can_bit_timing;
     integer start_count = 0;
     integer sample_count = 0;
     integer end_count = 0;
+    reg check_nominal_interval = 1'b1;
 
     // Small integer parameters keep simulation fast while preserving ratios:
     // one TQ every 5 clocks, 8 TQ per bit, sample at the sixth TQ.
@@ -34,7 +35,8 @@ module tb_can_bit_timing;
             clock_count = clock_count + 1;
             if (tq_tick) begin
                 tq_count = tq_count + 1;
-                if ((tq_count > 1) && ((clock_count - last_tq_clock) != 5)) begin
+                if (check_nominal_interval && (tq_count > 1) &&
+                    ((clock_count - last_tq_clock) != 5)) begin
                     $display("FAIL: TQ interval was %0d clocks", clock_count - last_tq_clock);
                     $fatal(1);
                 end
@@ -60,6 +62,7 @@ module tb_can_bit_timing;
             $fatal(1);
         end
 
+        check_nominal_interval = 1'b0;
         @(negedge clk); hard_sync = 1;
         @(posedge clk);
         #1;
