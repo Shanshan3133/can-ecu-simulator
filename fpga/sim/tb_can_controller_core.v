@@ -116,9 +116,12 @@ module tb_can_controller_core;
             $fatal(1);
         end
 
+        repeat (4) @(posedge clk);
+
         // Simultaneous requests: lower identifier 0x100 must win, while 0x300
         // observes arbitration loss and retries after the winning frame.
         first_received = 0;
+        first_id = 0;
         a_lost_seen = 0;
         a_success_seen = 0;
         b_success_seen = 0;

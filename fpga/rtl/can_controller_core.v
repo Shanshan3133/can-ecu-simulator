@@ -43,7 +43,7 @@ module can_controller_core #(
     reg [3:0] pending_dlc;
     reg [63:0] pending_data;
     reg [3:0] retry_count;
-    reg [2:0] recessive_wait;
+    reg [3:0] recessive_wait;
 
     wire tx_serial_bit;
     wire tx_engine_busy;
@@ -110,7 +110,10 @@ module can_controller_core #(
 
             if (pending && !tx_engine_busy && !bus_off) begin
                 if (bit_tick && can_rx) begin
-                    if (recessive_wait == 2) begin
+                    // Eleven consecutive recessive bits qualify the bus as
+                    // idle. Waiting for only the three intermission bits can
+                    // falsely restart inside another node's stuffed frame.
+                    if (recessive_wait == 10) begin
                         start_tx <= 1'b1;
                         recessive_wait <= 0;
                     end else recessive_wait <= recessive_wait + 1'b1;
