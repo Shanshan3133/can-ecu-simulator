@@ -48,8 +48,9 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - Physical two-node CAN communication verified with a retained decoded trace
 - GitHub Actions automatically tests the host tool, exercises simulation and evidence plotting, and compiles all three firmware environments
 - Synthesizable vendor-neutral Verilog CAN controller with CRC-15, bit timing,
-  stuffing, standard-frame TX/RX, arbitration, ACK/retry, and fault confinement
-- Six self-checking RTL simulations plus automatic Yosys synthesis in CI
+  stuffing, standard-frame TX/RX, arbitration, ACK/retry, active/passive error
+  signalling, and fault confinement
+- Seven self-checking RTL simulations plus automatic Yosys synthesis in CI
 
 ## Repository layout
 
@@ -221,9 +222,9 @@ The extension replaces reliance on a prebuilt CAN controller IP with a
 vendor-neutral Classical CAN 2.0A RTL core. Its board-independent implementation
 now covers CRC-15/CAN, synchronized bit timing, stuffing/de-stuffing, standard
 data-frame transmit and receive paths, acceptance filtering, ACK and bounded
-retry, nondestructive arbitration, error counters, passive/bus-off states, and
-bus-off recovery. Six self-checking Icarus Verilog simulations and Yosys generic
-synthesis run in CI.
+retry, nondestructive arbitration, error counters, active/passive error
+signalling, passive/bus-off states, and bus-off recovery. Seven self-checking
+Icarus Verilog simulations and Yosys generic synthesis run in CI.
 
 See [FPGA CAN Controller Extension](fpga/README.md) for the architecture, test
 command, scope, and development sequence. The only remaining FPGA stage is
@@ -231,7 +232,7 @@ board-specific implementation and physical third-node validation.
 
 ## Portfolio summary
 
-> Designed and physically validated a two-node 500 kbit/s CAN 2.0A ECU network on ESP32, including CRC-8/SAE-J1850 protection, rolling-counter and timeout-based fail-safe torque control, multi-rate arbitration, serial/SD logging, custom decoding, fault injection, and telemetry visualization; then implemented a synthesizable vendor-neutral FPGA CAN controller in Verilog with CRC-15, bit timing, stuffing, standard-frame TX/RX, arbitration, ACK/retry, and fault confinement, verified by six automated RTL simulations and Yosys synthesis.
+> Designed and physically validated a two-node 500 kbit/s CAN 2.0A ECU network on ESP32, including CRC-8/SAE-J1850 protection, rolling-counter and timeout-based fail-safe torque control, multi-rate arbitration, serial/SD logging, custom decoding, fault injection, and telemetry visualization; then implemented a synthesizable vendor-neutral FPGA CAN controller in Verilog with CRC-15, bit timing, stuffing, standard-frame TX/RX, arbitration, ACK/retry, active/passive error signalling, and fault confinement, verified by seven automated RTL simulations and Yosys synthesis.
 
 This project is intended for bench education and portfolio demonstration. It must not be connected directly to a production vehicle or used in a safety-critical system.
 

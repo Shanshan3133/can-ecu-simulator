@@ -53,9 +53,12 @@ module can_controller_core #(
     wire rx_ack_drive;
     wire any_rx_error = crc_error || stuff_error || form_error;
     wire any_tx_error = tx_ack_error || tx_bit_error;
+    wire error_flag_bit;
+    wire error_flag_busy;
 
-    assign can_tx = tx_serial_bit & ~(rx_ack_drive && !tx_engine_busy);
-    assign tx_busy = pending || tx_engine_busy;
+    assign can_tx = tx_serial_bit & ~(rx_ack_drive && !tx_engine_busy) &
+                    error_flag_bit;
+    assign tx_busy = pending || tx_engine_busy || error_flag_busy;
 
     can_tx transmitter (
         .clk(clk), .rst(rst), .bit_tick(bit_tick), .start(start_tx),
@@ -84,6 +87,13 @@ module can_controller_core #(
         .bus_off(bus_off)
     );
 
+    can_error_flag error_signalling (
+        .clk(clk), .rst(rst), .bit_tick(bit_tick),
+        .trigger(any_rx_error || any_tx_error),
+        .error_passive(error_passive), .bus_off(bus_off),
+        .error_bit(error_flag_bit), .busy(error_flag_busy)
+    );
+
     always @(posedge clk) begin
         start_tx   <= 1'b0;
         tx_success <= 1'b0;
@@ -108,7 +118,7 @@ module can_controller_core #(
                 recessive_wait <= 0;
             end
 
-            if (pending && !tx_engine_busy && !bus_off) begin
+            if (pending && !tx_engine_busy && !error_flag_busy && !bus_off) begin
                 if (bit_tick && can_rx) begin
                     // Eleven consecutive recessive bits qualify the bus as
                     // idle. Waiting for only the three intermission bits can

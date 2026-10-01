@@ -20,11 +20,13 @@ scope. Implemented and automatically verified:
   nondestructive arbitration monitoring, ACK/bit-error detection, and status.
 - `can_error_state.v`: transmit/receive error counters, warning/passive states,
   bus-off entry, and 128 x 11-recessive-bit recovery.
+- `can_error_flag.v`: active/passive error flags, error delimiter, and
+  intermission generation.
 - `can_controller_core.v`: one-entry TX buffer, automatic bounded retry, RX
   interface, bus-idle qualification, ACK wiring, and fault confinement.
 - `can_transceiver_top.v`: double-flop RX synchronization, configurable bit
   timing, and board-independent TXD/RXD connection for a 3.3 V transceiver.
-- Six self-checking Icarus Verilog testbenches and generic Yosys synthesis.
+- Seven self-checking Icarus Verilog testbenches and generic Yosys synthesis.
 
 Run the tests after installing Icarus Verilog:
 
@@ -55,7 +57,7 @@ Completed development gates:
 2. **Receive-only core** — synchronizer, hard synchronization/resynchronization,
    destuffing, standard-frame parser, CRC/format checks, and error counters.
 3. **Transmit path** — standard data frames, bit stuffing, arbitration loss,
-   ACK handling, retransmission, and error frames.
+   ACK handling, retransmission, and active/passive error signalling.
 4. **System integration** — register/FIFO interface plus a small wrapper for the
    eventual FPGA board.
 
@@ -77,6 +79,7 @@ The CI suite checks:
 - nominal timing, hard synchronization, and phase resynchronization
 - valid de-stuffing plus six-identical-bit rejection
 - error-warning, error-passive, bus-off, and recovery thresholds
+- active/passive error flags, error delimiter, and intermission
 - bad-CRC rejection and missing-ACK detection
 - two-controller frame exchange, payload recovery, ACK, stuffing, simultaneous
   arbitration, and automatic retry by the losing node

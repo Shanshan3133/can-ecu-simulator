@@ -16,12 +16,13 @@
 | Nondestructive arbitration | simultaneous IDs `0x100` and `0x300` | Pass |
 | Automatic retry | losing `0x300` node transmits after bus becomes idle | Pass |
 | Fault confinement | warning/passive/bus-off thresholds | Pass |
+| Error signalling | active/passive flag, delimiter, and intermission | Pass |
 | Bus-off recovery | 128 occurrences of 11 recessive bits | Pass |
 | Synthesizable complete top | Yosys `synth -top can_transceiver_top` | Pass |
 | Physical third-node interoperability | requires FPGA board and transceiver | Pending |
 
 The automated run is visible in the repository's **Continuous Integration**
-GitHub Actions workflow. The same six simulations can be executed locally with:
+GitHub Actions workflow. The same seven simulations can be executed locally with:
 
 ```powershell
 python fpga/tests/run_rtl_tests.py
