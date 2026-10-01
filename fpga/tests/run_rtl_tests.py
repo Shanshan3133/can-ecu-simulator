@@ -11,14 +11,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-CASES = (
-    ("can_crc15", ROOT / "rtl" / "can_crc15.v", ROOT / "sim" / "tb_can_crc15.v"),
-    (
-        "can_bit_timing",
-        ROOT / "rtl" / "can_bit_timing.v",
-        ROOT / "sim" / "tb_can_bit_timing.v",
+CASES = {
+    "can_crc15": ("can_crc15.v",),
+    "can_bit_timing": ("can_bit_timing.v",),
+    "can_destuffer": ("can_destuffer.v",),
+    "can_error_state": ("can_error_state.v",),
+    "can_controller_core": (
+        "can_destuffer.v",
+        "can_rx.v",
+        "can_tx.v",
+        "can_error_state.v",
+        "can_controller_core.v",
     ),
-)
+}
 
 
 def main() -> int:
@@ -29,10 +34,12 @@ def main() -> int:
         return 2
 
     with tempfile.TemporaryDirectory(prefix="can-fpga-") as build_dir:
-        for name, rtl, testbench in CASES:
+        for name, rtl_names in CASES.items():
             output = Path(build_dir) / f"{name}.vvp"
+            sources = [str(ROOT / "rtl" / rtl_name) for rtl_name in rtl_names]
+            testbench = ROOT / "sim" / f"tb_{name}.v"
             subprocess.run(
-                [iverilog, "-g2012", "-Wall", "-o", str(output), str(rtl), str(testbench)],
+                [iverilog, "-g2012", "-Wall", "-o", str(output), *sources, str(testbench)],
                 check=True,
             )
             subprocess.run([vvp, str(output)], check=True)
