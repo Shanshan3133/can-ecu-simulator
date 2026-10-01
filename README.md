@@ -4,7 +4,7 @@
 
 ![CAN ECU network topology](docs/network_topology.svg)
 
-A portfolio-ready automotive CAN 2.0A network built with two low-cost ESP32 development boards and two 3.3 V CAN transceivers. The project demonstrates embedded firmware, message and signal design, safety-oriented communication monitoring, data logging, protocol decoding, automated validation, and real-time visualization.
+A portfolio-ready automotive CAN 2.0A network built with two low-cost ESP32 development boards and two 3.3 V CAN transceivers. The project demonstrates embedded firmware, message and signal design, safety-oriented communication monitoring, data logging, protocol decoding, automated validation, and real-time visualization. A vendor-neutral FPGA extension now develops the protocol controller itself in RTL, beginning with verified CRC-15/CAN and nominal bit-timing primitives.
 
 ## Physical hardware evidence
 
@@ -47,6 +47,7 @@ The dashboard is implemented as a third **logical ECU** on Node B, so the baseli
 - Hardware-free traffic simulation and 13 automated host-side tests
 - Physical two-node CAN communication verified with a retained decoded trace
 - GitHub Actions automatically tests the host tool, exercises simulation and evidence plotting, and compiles all three firmware environments
+- Vendor-neutral Verilog CRC-15/CAN and nominal bit-timing modules with self-checking RTL simulation
 
 ## Repository layout
 
@@ -58,6 +59,9 @@ firmware/src/engine_ecu/         Engine ECU firmware and fault injection
 firmware/src/torque_logger_ecu/  Torque, safety, gateway, dashboard, and SD logic
 host/can_ecu_tool/               Python decoder, logger, simulator, and plots
 host/tests/                      Protocol, safety, and bus-load tests
+fpga/rtl/                        Vendor-neutral CAN controller RTL
+fpga/sim/                        Self-checking Verilog testbenches
+fpga/tests/run_rtl_tests.py      Cross-platform Icarus test runner
 docs/network_topology.svg        Network architecture diagram
 docs/WIRING.md                   Wiring and power-up instructions
 docs/PROTOCOL.md                 Message layout, CRC, arbitration, and safety design
@@ -207,6 +211,21 @@ Remaining physical validation:
 - The 60 Nm fail-safe policy is an educational design choice, not a value derived from a real vehicle safety analysis or ISO 26262 process.
 - The SD-enabled firmware compiles, but card compatibility, write latency, power-loss behavior, and filesystem durability require physical testing.
 - Bus-off recovery is implemented and compile-verified, but its recovery timing still requires cable-disconnect testing on the real network.
+- The FPGA extension currently contains verified protocol primitives, not yet a complete CAN node; receive, transmit, arbitration, stuffing, and fault-confinement state machines remain staged milestones.
+
+## FPGA controller extension
+
+The next project stage replaces reliance on a prebuilt CAN controller IP with a
+vendor-neutral Classical CAN 2.0A RTL core. The first checked-in milestone
+implements link-layer CRC-15/CAN and parameterized nominal bit timing, with
+self-checking Icarus Verilog simulations in CI. The receive path, transmit path,
+arbitration, bit stuffing, ACK/error handling, and eventual third-node FPGA
+hardware integration are tracked as explicit verification gates rather than
+being presented as already complete.
+
+See [FPGA CAN Controller Extension](fpga/README.md) for the architecture, test
+command, scope, and development sequence. No FPGA board is required for the
+current simulation-first milestone.
 
 ## Portfolio summary
 

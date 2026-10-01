@@ -9,6 +9,19 @@ permissions:
   contents: read
 
 jobs:
+  fpga-rtl-tests:
+    name: FPGA RTL simulation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Icarus Verilog
+        run: sudo apt-get update && sudo apt-get install --yes iverilog
+
+      - name: Run self-checking RTL testbenches
+        run: python fpga/tests/run_rtl_tests.py
+
   host-tests:
     name: Host tests and evidence
     runs-on: ubuntu-latest
